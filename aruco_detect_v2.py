@@ -96,8 +96,12 @@ class TARUCO_Nav:
             
             aruco_dict = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
             parameters = aruco.DetectorParameters_create()
-
             corners, ids, rejectedImgPoints = aruco.detectMarkers(cv_image, aruco_dict, parameters=parameters)
+
+            # marker_dict = aruco.getPredefinedDictionary(aruco.DICT_ARUCO_ORIGINAL)
+            # param_markers = aruco.DetectorParameters()
+            # detector = aruco.ArucoDetector(marker_dict, param_markers)
+            # corners, ids, reject = detector.detectMarkers(cv_image)
             
             message = ""
             
