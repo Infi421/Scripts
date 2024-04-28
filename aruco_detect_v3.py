@@ -109,7 +109,7 @@ class TARUCO_Nav:
                     
                         center_x = None
                         center_y = None
-                        if id == accepted_id :
+                        if id == accepted_id:
                             aruco.drawDetectedMarkers(cv_image, corners, ids)
                             left_top, right_top, right_bottom, left_bottom  = corner[0]
                             center = (left_top + right_top + right_bottom + left_bottom)/4
@@ -136,7 +136,9 @@ class TARUCO_Nav:
                             if not self.reached(area, id):
                                 self.move_forward()
                             else:
+                                LIST_OF_ARUCOS = LIST_OF_ARUCOS[1:]
                                 self.finding_aruco()
+
                 
                     if count != 0:
                         break
@@ -147,6 +149,8 @@ class TARUCO_Nav:
 
             cv2.imshow('Aruco Tags Detection', cv_image)
             cv2.waitKey(1)
+
+
 
         except Exception as e:
             rospy.logerr("Error processing image: {}".format(str(e)))
