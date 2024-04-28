@@ -21,7 +21,7 @@ class TARUCO_Nav:
         
         # self.count = 0
         # self.list_of_arucos = [0, 1, 2, 3]
-        self.target_aruco = 0
+        self.target_aruco = LIST_OF_ARUCOS[0]
         # self.recent_aruco = None 
         
         self.bridge = CvBridge()
@@ -79,8 +79,9 @@ class TARUCO_Nav:
     
     def reached(self, area, id):
         if area > THRESHOLD_AREA_MIN and area < THRESHOLD_AREA_MAX:
-            self.stop()
-            self.active = False 
+            #self.stop()
+            #self.active = False 
+            self.active = True
             return True  
     
 
@@ -96,31 +97,35 @@ class TARUCO_Nav:
             
             aruco_dict = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
             parameters = aruco.DetectorParameters_create()
-
             corners, ids, rejectedImgPoints = aruco.detectMarkers(cv_image, aruco_dict, parameters=parameters)
+
+            # marker_dict = aruco.getPredefinedDictionary(aruco.DICT_ARUCO_ORIGINAL)
+            # param_markers = aruco.DetectorParameters()
+            # detector = aruco.ArucoDetector(marker_dict, param_markers)
+            # corners, ids, reject = detector.detectMarkers(cv_image)
             
             message = ""
+
+            if LIST_OF_ARUCOS == []:
+                self.end_message()
+                self.stop()
+                self.active = False
+                return
             
             if ids is not None:
-                count = 0
                 print(ids)
-                for accepted_id in LIST_OF_ARUCOS:
-                    for id, corner in zip(ids, corners): 
-                    
-                        center_x = None
-                        center_y = None
-                        if id == accepted_id:
-                            aruco.drawDetectedMarkers(cv_image, corners, ids)
-                            left_top, right_top, right_bottom, left_bottom  = corner[0]
-                            center = (left_top + right_top + right_bottom + left_bottom)/4
-                            center_x = center[0]
-                            center_y = center[1]
-                            count = count +1
+                for id, corner in zip(ids, corners): 
+                    center_x = None
+                    center_y = None
+                    if id == self.target_aruco :
+                        aruco.drawDetectedMarkers(cv_image, corners, ids)
+                        left_top, right_top, right_bottom, left_bottom  = corner[0]
+                        center = (left_top + right_top + right_bottom + left_bottom)/4
+                        center_x = center[0]
+                        center_y = center[1]
                         
-                            area = cv2.contourArea(corner[0])
+                        area = cv2.contourArea(corner[0])
                     
-                        if center_x == None and center_y == None:
-                            continue
 
                         # LEFT
                         if center_x <= self.left_grid:        
@@ -136,21 +141,22 @@ class TARUCO_Nav:
                             if not self.reached(area, id):
                                 self.move_forward()
                             else:
+                                rospy.loginfo("A CHECKPOINT REACHED!!!!!!!!")
+                                self.stop()
+                                self.active = False
                                 LIST_OF_ARUCOS = LIST_OF_ARUCOS[1:]
-                                self.finding_aruco()
 
-                
-                    if count != 0:
-                        break
+                                if len(LIST_OF_ARUCOS) > 0:
+                                    self.target_aruco = LIST_OF_ARUCOS[0]
+                                    self.active = True
+                                    self.finding_aruco()
 
+ 
             elif ids is None:                  #NEW ADDED
                 self.finding_aruco()       
                        
-
             cv2.imshow('Aruco Tags Detection', cv_image)
             cv2.waitKey(1)
-
-
 
         except Exception as e:
             rospy.logerr("Error processing image: {}".format(str(e)))
