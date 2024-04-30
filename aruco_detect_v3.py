@@ -8,20 +8,20 @@ import cv2.aruco as aruco
 import numpy as np
 from geometry_msgs.msg import Twist
 
-LIST_OF_ARUCOS = [0, 4, 2 ,1]
+#LIST_OF_ARUCOS = [0, 4, 2 ,1]
 ROTATING_SPEED = 200 
 LINEAR_SPEED = 150
-THRESHOLD_AREA_MIN = 3800 
-THRESHOLD_AREA_MAX = 4000 
+THRESHOLD_AREA_MIN = 32000 #3800 
+THRESHOLD_AREA_MAX = 35000 #4000 
 
 
 class TARUCO_Nav:
     def __init__(self):
         rospy.init_node('aruco_tag_detector', anonymous=True)
-        
+        self.LIST_OF_ARUCOS = [0, 4, 2 ,1]
         # self.count = 0
-        # self.list_of_arucos = [0, 1, 2, 3]
-        self.target_aruco = LIST_OF_ARUCOS[0]
+        # self.self.LIST_OF_ARUCOS = [0, 1, 2, 3]
+        self.target_aruco = self.LIST_OF_ARUCOS[0]
         # self.recent_aruco = None 
         
         self.bridge = CvBridge()
@@ -78,9 +78,11 @@ class TARUCO_Nav:
         
     
     def reached(self, area, id):
+        # THRESHOLD_AREA_MIN = 3800 
+        # THRESHOLD_AREA_MAX = 4000 
         if area > THRESHOLD_AREA_MIN and area < THRESHOLD_AREA_MAX:
             #self.stop()
-            #self.active = False 
+            #self.active = False
             self.active = True
             return True  
     
@@ -106,18 +108,18 @@ class TARUCO_Nav:
             
             message = ""
 
-            if LIST_OF_ARUCOS == []:
+            if self.LIST_OF_ARUCOS == []:
                 self.end_message()
                 self.stop()
                 self.active = False
                 return
             
             if ids is not None:
-                print(ids)
                 for id, corner in zip(ids, corners): 
                     center_x = None
                     center_y = None
                     if id == self.target_aruco :
+                        print("TARGET ARUCO: ", self.target_aruco)
                         aruco.drawDetectedMarkers(cv_image, corners, ids)
                         left_top, right_top, right_bottom, left_bottom  = corner[0]
                         center = (left_top + right_top + right_bottom + left_bottom)/4
@@ -125,6 +127,7 @@ class TARUCO_Nav:
                         center_y = center[1]
                         
                         area = cv2.contourArea(corner[0])
+                        print("AREA: ", area)
                     
 
                         # LEFT
@@ -144,13 +147,15 @@ class TARUCO_Nav:
                                 rospy.loginfo("A CHECKPOINT REACHED!!!!!!!!")
                                 self.stop()
                                 self.active = False
-                                LIST_OF_ARUCOS = LIST_OF_ARUCOS[1:]
+                                self.LIST_OF_ARUCOS = self.LIST_OF_ARUCOS[1:]
 
-                                if len(LIST_OF_ARUCOS) > 0:
-                                    self.target_aruco = LIST_OF_ARUCOS[0]
+                                if len(self.LIST_OF_ARUCOS) > 0:
+                                    self.target_aruco = self.LIST_OF_ARUCOS[0]
+                                    #print("TARGET ARUCO: ", self.target_aruco)
                                     self.active = True
                                     self.finding_aruco()
-
+                    else:
+                        self.finding_aruco()
  
             elif ids is None:                  #NEW ADDED
                 self.finding_aruco()       
